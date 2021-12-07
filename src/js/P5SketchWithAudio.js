@@ -28,7 +28,7 @@ const P5SketchWithAudio = () => {
         p.loadMidi = () => {
             Midi.fromUrl(midi).then(
                 function(result) {
-                    const noteSet1 = result.tracks[5].notes; // Synth 1
+                    const noteSet1 = result.tracks[7].notes; // Sampler 1 - Dance Saw
                     p.scheduleCueSet(noteSet1, 'executeCueSet1');
                     p.audioLoaded = true;
                     document.getElementById("loader").classList.add("loading--complete");
@@ -61,23 +61,71 @@ const P5SketchWithAudio = () => {
         p.setup = () => {
             p.canvas = p.createCanvas(p.canvasWidth, p.canvasHeight);
             p.background(0);
+            p.populateRectanglesArray();
+            console.log(p.rectangles);
         }
 
         p.draw = () => {
-            p.fill(255, 255, 255, 0.7);
-            p.stroke(255);
-            p.ellipse(200, 200 , 80, 80);
-            p.ellipse(212, 185 , 15, 15);
             if(p.audioLoaded && p.song.isPlaying()){
-
+                for (let i = 0; i < p.rectanglesToDraw.length; i++) {
+                    const {x, y, width, height, colour } = p.rectanglesToDraw[i];
+                    p.fill(colour);
+                    p.rect(x,y, width, height)
+                }
             }
         }
 
+        p.rectangles = [];
+
+        p.rectanglesToDraw = [];
+
+        p.index = 0;
+
         p.executeCueSet1 = (note) => {
-            p.background(p.random(255), p.random(255), p.random(255));
-            p.fill(p.random(255), p.random(255), p.random(255));
-            p.noStroke();
-            p.ellipse(p.width / 2, p.height / 2, p.width / 4, p.width / 4);
+           p.rectanglesToDraw = p.rectangles[p.index];
+           p.index++;
+           if(p.index > 4) {
+               p.index = 0;
+           }
+        }
+
+        p.populateRectanglesArray = () => {
+            for (let i = 0; i < 5; i++) {
+                p.rectangles[i] = [];
+                if(i){
+                    const prevRects = p.rectangles[i - 1];
+                    for (let j = 0; j < prevRects.length; j++) {
+                        const { width, height } = prevRects[j],
+                            newWidth = width /2,
+                            newHeight = height /2;
+                        for (let x = 0; x < p.width; x = x + newWidth) {
+                            for (let y = 0; y < p.height; y = y + newHeight) {
+                                p.rectangles[i].push(
+                                    {
+                                        x: x,
+                                        y: y,
+                                        width: newWidth,
+                                        height: newHeight,
+                                        colour: p.color(255, p.random(0, 255), 255),
+                                    }
+                                );
+                                
+                            }
+                        }
+                    }
+                }
+                else {
+                    p.rectangles[i].push(
+                        {
+                            x: 0,
+                            y: 0,
+                            width: p.width,
+                            height: p.height,
+                            colour: p.color(255, p.random(0, 255), 255),
+                        }
+                    );
+                }
+            }
         }
 
         p.mousePressed = () => {
